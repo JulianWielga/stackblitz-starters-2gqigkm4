@@ -75,13 +75,13 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
 
     function getOptimalZoom(speedKmh) {
         if (speedKmh < 20) {
-            return 17;
+            return 19;
         } else if (speedKmh < 60) {
-            return 16;
+            return 18;
         } else if (speedKmh < 100) {
-            return 15;
+            return 17;
         } else {
-            return 14;
+            return 16;
         }
     }
 
