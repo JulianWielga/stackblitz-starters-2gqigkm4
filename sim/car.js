@@ -1,41 +1,7 @@
 import { ACTION_INTERVAL_MS, TIME_SCALE } from "../env.js";
 import { CITIES } from "./CITIES.js";
 import { generateHash } from "../utils.js";
-
-// Helper function to interpolate a point at a given distance on a polyline
-function getPointAtDistance(coords, distance) {
-    if (!coords || coords.length < 2) {
-        return null;
-    }
-
-    let accumulatedDistance = 0;
-    for (let i = 0; i < coords.length - 1; i++) {
-        const from = coords[i];
-        const to = coords[i + 1];
-        const segmentDistance = from.distanceTo(to); // distance in meters
-
-        if (accumulatedDistance + segmentDistance >= distance) {
-            const ratio = (distance - accumulatedDistance) / segmentDistance;
-            return L.latLng(from.lat + (to.lat - from.lat) * ratio, from.lng + (to.lng - from.lng) * ratio);
-        }
-        accumulatedDistance += segmentDistance;
-    }
-
-    // If distance is out of bounds, return the last point
-    return coords[coords.length - 1];
-}
-
-// Helper function to calculate the total distance of a polyline
-function calculatePolylineDistance(coords) {
-    let totalDistance = 0;
-    if (!coords || coords.length < 2) {
-        return totalDistance;
-    }
-    for (let i = 0; i < coords.length - 1; i++) {
-        totalDistance += coords[i].distanceTo(coords[i + 1]);
-    }
-    return totalDistance;
-}
+import { calculatePolylineDistance, getPointAtDistance } from "./utils.js";
 
 export function createCarMarker(map, startPosition) {
     const id = generateHash();
@@ -48,7 +14,7 @@ export function createCarMarker(map, startPosition) {
         iconAnchor: [16, 16],
     });
 
-    const marker = L.marker(startPosition, { icon: carIcon }).addTo(map);
+    const marker = L.marker(startPosition, { icon: carIcon, interactive: false }).addTo(map);
 
     return { id, marker };
 }

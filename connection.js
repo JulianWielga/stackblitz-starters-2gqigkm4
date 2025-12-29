@@ -1,7 +1,5 @@
 import { readSubscriptionId, storeSubscriptionId } from "./subscriptionIdStore.js";
-
 import { SOCKET_URL, TOKEN } from "./env.js";
-import { getDataMessageHandler } from "./dataHandlers.js";
 
 let ws;
 let reconnectTimer;
