@@ -1,7 +1,7 @@
 import {readDataMessage} from "./readDataMessage.js";
 import {readSubscriptionId, storeSubscriptionId} from "./subscriptionIdStore.js";
 
-import {BASE_URL, TOKEN} from "./env.js";
+import {SOCKET_URL, TOKEN} from "./env.js";
 
 let ws;
 let reconnectTimer;
@@ -10,7 +10,7 @@ const connect = () => {
     if (document.visibilityState !== "visible") return;
 
     const subscription = readSubscriptionId();
-    const url = new URL(BASE_URL);
+    const url = new URL(SOCKET_URL);
     if (TOKEN) url.searchParams.set("token", TOKEN);
     if (subscription) url.searchParams.set("subscriptionId", subscription);
 

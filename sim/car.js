@@ -1,3 +1,5 @@
+import {performCarAction} from "./performCarAction.js";
+
 // Helper function to interpolate a point at a given distance on a polyline
 function getPointAtDistance(coords, distance) {
     if (!coords || coords.length < 2) {
@@ -24,13 +26,6 @@ function getPointAtDistance(coords, distance) {
     return coords[coords.length - 1];
 }
 
-function performCarAction(position, speed_kmh) {
-    console.log({
-        position: position,
-        speed_kmh: speed_kmh
-    });
-}
-
 export function createCarMarker(map, startPosition) {
     const carIcon = L.icon({
         iconUrl: 'https://icons.iconarchive.com/icons/fa-team/fontawesome/128/FontAwesome-Car-icon.png',
@@ -41,7 +36,7 @@ export function createCarMarker(map, startPosition) {
     return L.marker(startPosition, {icon: carIcon}).addTo(map);
 }
 
-export function animateCar(carMarker, route, onComplete) {
+export function animateCar(map, carMarker, route, onComplete) {
     const coordinates = route.coordinates;
     const totalRouteDistance = route.summary.totalDistance; // in meters
 
@@ -57,12 +52,12 @@ export function animateCar(carMarker, route, onComplete) {
 
         // Introduce multiple sine waves for more varied, yet smooth, fluctuation
         // Wave 1: Higher frequency for faster changes
-        const frequency1 = 0.5; // Increased from 0.05
-        const speedComponent1 = amplitude_kmh * 0.7 * Math.sin(time_s * frequency1); // 70% of amplitude
+        const frequency1 = 0.5;
+        const speedComponent1 = amplitude_kmh * 0.7 * Math.sin(time_s * frequency1);
 
         // Wave 2: Lower frequency for longer, underlying trends (smoother randomness)
-        const frequency2 = 0.2; // Slightly higher than old frequency
-        const speedComponent2 = amplitude_kmh * 0.3 * Math.sin(time_s * frequency2 + Math.PI / 4); // 30% of amplitude, with phase shift
+        const frequency2 = 0.2;
+        const speedComponent2 = amplitude_kmh * 0.3 * Math.sin(time_s * frequency2 + Math.PI / 4);
 
         let combinedSpeed = baseSpeed_kmh + speedComponent1 + speedComponent2;
 
@@ -71,11 +66,6 @@ export function animateCar(carMarker, route, onComplete) {
 
         return combinedSpeed;
     }
-
-    // Interval for logging actions
-    actionInterval = setInterval(() => {
-        performCarAction(carMarker.getLatLng(), Math.round(currentSpeed_kmh));
-    }, 1000);
 
     function animate(timestamp) {
         if (!lastTimestamp) {
@@ -107,15 +97,19 @@ export function animateCar(carMarker, route, onComplete) {
             clearInterval(actionInterval);
             carMarker.setLatLng(coordinates[coordinates.length - 1]);
 
-            performCarAction(carMarker.getLatLng(), 0);
+            performCarAction(map, carMarker.getLatLng(), 0);
 
             if (onComplete) {
-                setTimeout(() => {
-                    onComplete();
-                }, 5000); // 5 seconds pause
+                onComplete();
             }
         }
     }
 
-    requestAnimationFrame(animate);
+    actionInterval = setInterval(() => {
+        performCarAction(map, carMarker.getLatLng(), Math.round(currentSpeed_kmh));
+    }, 2000);
+
+    setTimeout(() => {
+        requestAnimationFrame(animate);
+    }, 5000);
 }

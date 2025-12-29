@@ -88,7 +88,7 @@ export function createRandomRoute(map) {
         const bounds = L.latLngBounds(route.coordinates);
         map.fitBounds(bounds, { padding: [50, 50] }); // Add padding
 
-        animateCar(carMarker, route, planNextTrip);
+        animateCar(map, carMarker, e.routes[0], planNextTrip);
     });
 
     // Start the first trip
