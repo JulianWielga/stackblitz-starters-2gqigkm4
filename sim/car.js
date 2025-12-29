@@ -90,7 +90,7 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
         // Slower speed -> larger zoom number (zoomed in)
         let optimalZoom = MAX_ZOOM - (speedPercentage * (MAX_ZOOM - MIN_ZOOM));
 
-        return Math.round(optimalZoom);
+        return optimalZoom;
     }
 
     function animate(timestamp) {
