@@ -1,4 +1,3 @@
-import { performCarAction } from "../performCarAction.js";
 import { ACTION_INTERVAL_MS, TIME_SCALE } from "../env.js";
 import { CITIES } from "./CITIES.js";
 import { generateHash } from "../utils.js";
@@ -84,7 +83,7 @@ function getFluctuatingSpeed_kmh(tripTime_s) {
     return combinedSpeed;
 }
 
-export function animateCar(map, carMarker, route, onComplete) {
+export function animateCar(carMarker, route, onComplete, onCarUpdate) {
     const coordinates = route.coordinates;
     const totalRouteDistance = calculatePolylineDistance(coordinates); // Calculate actual distance from coordinates
 
@@ -157,7 +156,7 @@ export function animateCar(map, carMarker, route, onComplete) {
             totalDistanceCovered = totalRouteDistance; // Ensure it's exactly at the end
             currentSpeed_mps = 0; // Force speed to zero at destination
             carMarker.setLatLng(coordinates[coordinates.length - 1]);
-            performCarAction(map, carMarker.getLatLng(), 0); // Car stopped
+            onCarUpdate(carMarker.getLatLng(), 0); // Car stopped
 
             if (onComplete) {
                 onComplete();
@@ -174,7 +173,7 @@ export function animateCar(map, carMarker, route, onComplete) {
 
         // Call performCarAction at regular intervals (based on actual time, not scaled)
         if (timestamp - lastActionTime >= ACTION_INTERVAL_MS) {
-            performCarAction(map, carMarker.getLatLng(), Math.round(currentSpeed_mps * 3.6)); // Convert m/s to km/h
+            onCarUpdate(carMarker.getLatLng(), Math.round(currentSpeed_mps * 3.6)); // Convert m/s to km/h
             lastActionTime = timestamp;
         }
 

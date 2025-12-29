@@ -43,7 +43,7 @@ function calculateDestinationPoint(point, bearing, distance) {
     };
 }
 
-export function createRandomRoute(map, carMarker) {
+export function createRandomRoute(map, carMarker, onCarUpdate) {
     let destinationMarker;
     let routingControl;
 
@@ -87,7 +87,7 @@ export function createRandomRoute(map, carMarker) {
             destinationMarker = L.marker(actualEndOfRoute).addTo(map).bindPopup("Destination");
         }
 
-        animateCar(map, carMarker, e.routes[0], planNextTrip);
+        animateCar(carMarker, e.routes[0], planNextTrip, onCarUpdate);
     });
 
     // Start the first trip
