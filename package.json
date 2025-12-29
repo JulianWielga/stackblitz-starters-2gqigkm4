@@ -1,9 +1,12 @@
 {
-  "type": "module",
-  "scripts": {
-    "start": "servor --reload"
-  },
-  "dependencies": {
-    "servor": "^4.0.2"
-  }
+    "type": "module",
+    "scripts": {
+        "start": "servor --reload"
+    },
+    "dependencies": {
+        "servor": "^4.0.2"
+    },
+    "devDependencies": {
+        "prettier": "3.7.4"
+    }
 }

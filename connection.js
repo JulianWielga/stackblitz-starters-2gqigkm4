@@ -1,12 +1,12 @@
-import {readDataMessage} from "./readDataMessage.js";
-import {readSubscriptionId, storeSubscriptionId} from "./subscriptionIdStore.js";
+import { readDataMessage } from "./readDataMessage.js";
+import { readSubscriptionId, storeSubscriptionId } from "./subscriptionIdStore.js";
 
-import {SOCKET_URL, TOKEN} from "./env.js";
+import { SOCKET_URL, TOKEN } from "./env.js";
 
 let ws;
 let reconnectTimer;
 
-const connect = () => {
+const connect = (sim) => {
     if (document.visibilityState !== "visible") return;
 
     const subscription = readSubscriptionId();
@@ -16,15 +16,15 @@ const connect = () => {
 
     ws = new WebSocket(url.toString());
 
-    ws.addEventListener("message", e => {
+    ws.addEventListener("message", (e) => {
         try {
-            const {data, subscriptionId, type} = JSON.parse(e.data);
+            const { data, subscriptionId, type } = JSON.parse(e.data);
             switch (type) {
                 case "session": {
                     return storeSubscriptionId(subscriptionId);
                 }
                 case "message": {
-                    return readDataMessage(data);
+                    return readDataMessage(sim, JSON.parse(data));
                 }
             }
         } catch (e) {
@@ -48,12 +48,12 @@ const scheduleReconnect = () => {
     }, 1000);
 };
 
-export function initializeConnection() {
+export function initializeConnection(sim) {
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible" && (!ws || ws.readyState === WebSocket.CLOSED)) {
-            connect();
+            connect(sim);
         }
     });
 
-    connect();
+    connect(sim);
 }

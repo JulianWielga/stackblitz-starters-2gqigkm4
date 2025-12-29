@@ -1,6 +1,6 @@
 export function generateHash(length = 8) {
-    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
+    const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }

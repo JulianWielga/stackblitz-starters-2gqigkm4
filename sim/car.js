@@ -1,5 +1,7 @@
-import {performCarAction} from "../performCarAction.js";
-import {ACTION_INTERVAL_MS, TIME_SCALE} from "../env.js";
+import { performCarAction } from "../performCarAction.js";
+import { ACTION_INTERVAL_MS, TIME_SCALE } from "../env.js";
+import { CITIES } from "./CITIES.js";
+import { generateHash } from "../utils.js";
 
 // Helper function to interpolate a point at a given distance on a polyline
 function getPointAtDistance(coords, distance) {
@@ -15,10 +17,7 @@ function getPointAtDistance(coords, distance) {
 
         if (accumulatedDistance + segmentDistance >= distance) {
             const ratio = (distance - accumulatedDistance) / segmentDistance;
-            return L.latLng(
-                from.lat + (to.lat - from.lat) * ratio,
-                from.lng + (to.lng - from.lng) * ratio
-            );
+            return L.latLng(from.lat + (to.lat - from.lat) * ratio, from.lng + (to.lng - from.lng) * ratio);
         }
         accumulatedDistance += segmentDistance;
     }
@@ -40,19 +39,25 @@ function calculatePolylineDistance(coords) {
 }
 
 export function createCarMarker(map, startPosition) {
+    const id = generateHash();
+
+    startPosition ||= CITIES[Math.floor(Math.random() * CITIES.length)];
+
     const carIcon = L.icon({
-        iconUrl: 'https://icons.iconarchive.com/icons/fa-team/fontawesome/128/FontAwesome-Car-icon.png',
+        iconUrl: "https://icons.iconarchive.com/icons/fa-team/fontawesome/128/FontAwesome-Car-icon.png",
         iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconAnchor: [16, 16],
     });
 
-    return L.marker(startPosition, {icon: carIcon}).addTo(map);
+    const marker = L.marker(startPosition, { icon: carIcon }).addTo(map);
+
+    return { id, marker };
 }
 
 const MAX_SPEED_KMH = 130; // Maximum speed in km/h
-const MAX_SPEED_MPS = MAX_SPEED_KMH * 1000 / 3600; // Maximum speed in m/s
+const MAX_SPEED_MPS = (MAX_SPEED_KMH * 1000) / 3600; // Maximum speed in m/s
 const MIN_SPEED_KMH = 10; // Minimum speed in km/h
-const MIN_SPEED_MPS = MIN_SPEED_KMH * 1000 / 3600; // Minimum speed in m/s
+const MIN_SPEED_MPS = (MIN_SPEED_KMH * 1000) / 3600; // Minimum speed in m/s
 const ACCELERATION_MPS2 = 1.5; // Acceleration in m/s^2
 const DECELERATION_MPS2 = 2.0; // Deceleration in m/s^2
 
@@ -114,15 +119,17 @@ export function animateCar(map, carMarker, route, onComplete) {
 
         let targetSpeed_mps;
 
-        if (remainingDistance <= requiredStoppingDistance + STOPPING_BUFFER_METERS) { // Small buffer for precision
+        if (remainingDistance <= requiredStoppingDistance + STOPPING_BUFFER_METERS) {
+            // Small buffer for precision
             // Phase 3: Decelerate to stop at the end
             targetSpeed_mps = 0;
-        } else if (currentSpeed_mps < MIN_SPEED_MPS * FLUCTUATING_SPEED_THRESHOLD_MULTIPLIER) { // Threshold to get into fluctuating speed range
+        } else if (currentSpeed_mps < MIN_SPEED_MPS * FLUCTUATING_SPEED_THRESHOLD_MULTIPLIER) {
+            // Threshold to get into fluctuating speed range
             // Phase 1: Accelerate initially towards MAX_SPEED
             targetSpeed_mps = MAX_SPEED_MPS;
         } else {
             // Phase 2: Fluctuating speed
-            targetSpeed_mps = getFluctuatingSpeed_kmh(tripTime_s) * 1000 / 3600;
+            targetSpeed_mps = (getFluctuatingSpeed_kmh(tripTime_s) * 1000) / 3600;
         }
 
         // Adjust current speed towards target speed
@@ -145,7 +152,8 @@ export function animateCar(map, carMarker, route, onComplete) {
         let distanceIncrement = currentSpeed_mps * effectiveDeltaTime_s;
 
         // Robust End Condition Check: If the car is effectively at or past the end
-        if (totalDistanceCovered + distanceIncrement >= totalRouteDistance - FLOATING_POINT_TOLERANCE_METERS) { // -0.01 for floating point tolerance
+        if (totalDistanceCovered + distanceIncrement >= totalRouteDistance - FLOATING_POINT_TOLERANCE_METERS) {
+            // -0.01 for floating point tolerance
             totalDistanceCovered = totalRouteDistance; // Ensure it's exactly at the end
             currentSpeed_mps = 0; // Force speed to zero at destination
             carMarker.setLatLng(coordinates[coordinates.length - 1]);
@@ -175,4 +183,3 @@ export function animateCar(map, carMarker, route, onComplete) {
 
     requestAnimationFrame(animate);
 }
-

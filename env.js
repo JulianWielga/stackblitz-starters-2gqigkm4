@@ -1,5 +1,5 @@
 const TENANT = "pink-snakes";
-const POST_TOPIC = 'http.a07fb369';
+const POST_TOPIC = "http.a07fb369";
 const SOCKET_TOPIC = "socket";
 
 export const TOKEN = "KNvNBaUNRA2OQJG3xlseVkVR";

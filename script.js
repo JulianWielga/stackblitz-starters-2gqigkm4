@@ -1,5 +1,5 @@
-import { initializeMap } from './sim/map.js';
-import { initializeConnection } from './connection.js';
+import { initializeMap } from "./sim/map.js";
+import { initializeConnection } from "./connection.js";
 
-initializeMap();
-initializeConnection();
+const sim = initializeMap();
+initializeConnection(sim);

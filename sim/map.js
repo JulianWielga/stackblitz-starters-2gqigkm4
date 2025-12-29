@@ -1,12 +1,16 @@
-import { createRandomRoute } from './route.js';
+import { createRandomRoute } from "./route.js";
+import { createCarMarker } from "./car.js";
 
 export function initializeMap() {
-    const map = L.map('map');
+    const map = L.map("map");
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: '© OpenStreetMap'
+        attribution: "© OpenStreetMap",
     }).addTo(map);
 
-    createRandomRoute(map);
+    const car = createCarMarker(map);
+    createRandomRoute(map, car.marker);
+
+    return { map, carId: car.id };
 }
