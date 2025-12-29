@@ -34,7 +34,7 @@ export function createCarMarker(map, startPosition) {
     return L.marker(startPosition, {icon: carIcon}).addTo(map);
 }
 
-export function animateCar(carMarker, route) {
+export function animateCar(carMarker, route, onComplete) {
     const coordinates = route.coordinates;
     const totalDistance = route.summary.totalDistance; // in meters
     const speed = 80 * 1000 / 3600; // 80 km/h in m/s
@@ -60,6 +60,9 @@ export function animateCar(carMarker, route) {
         } else {
             // Animation finished, place car at the end
             carMarker.setLatLng(coordinates[coordinates.length - 1]);
+            if (onComplete) {
+                onComplete();
+            }
         }
     }
 

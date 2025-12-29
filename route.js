@@ -37,6 +37,10 @@ function calculateDestinationPoint(point, bearing, distance) {
 
 
 export function createRandomRoute(map) {
+    let carMarker;
+    let destinationMarker;
+    let routingControl;
+
     const cities = [
         { name: "Warsaw", lat: 52.2297, lng: 21.0122 },
         { name: "Berlin", lat: 52.5200, lng: 13.4050 },
@@ -48,34 +52,45 @@ export function createRandomRoute(map) {
         { name: "Vienna", lat: 48.2082, lng: 16.3738 }
     ];
 
-    // Pick a random city from the list
-    const startPoint = cities[Math.floor(Math.random() * cities.length)];
+    function planNextTrip() {
+        const startPoint = carMarker.getLatLng();
 
-    // Random distance between 10 and 15 km
-    const distance = Math.random() * 5 + 10;
-    // Random bearing
-    const bearing = Math.random() * 360;
+        // 1. Calculate new end point
+        const distance = Math.random() * 1.5 + 0.5; // 0.5-2 km
+        const bearing = Math.random() * 360;
+        const endPointData = calculateDestinationPoint({ lat: startPoint.lat, lng: startPoint.lng }, bearing, distance);
+        const endPoint = L.latLng(endPointData.lat, endPointData.lng);
 
-    const endPoint = calculateDestinationPoint(startPoint, bearing, distance);
+        // 2. Update destination marker
+        if (destinationMarker) {
+            destinationMarker.setLatLng(endPoint);
+        } else {
+            destinationMarker = L.marker(endPoint).addTo(map).bindPopup("Destination");
+        }
 
-    const point1 = L.latLng(startPoint.lat, startPoint.lng);
-    const point2 = L.latLng(endPoint.lat, endPoint.lng);
+        // 3. Update routing control
+        routingControl.setWaypoints([
+            startPoint,
+            endPoint
+        ]);
+    }
 
-    L.marker(point1).addTo(map).bindPopup("Point 1");
-    L.marker(point2).addTo(map).bindPopup("Point 2");
+    // Pick a random city for the very first start point
+    const initialStartPoint = cities[Math.floor(Math.random() * cities.length)];
+    carMarker = createCarMarker(map, initialStartPoint);
 
-    const carMarker = createCarMarker(map, point1);
-
-    const control = L.Routing.control({
-        waypoints: [
-            point1,
-            point2
-        ],
+    routingControl = L.Routing.control({
         createMarker: () => null
     }).addTo(map);
 
-    control.on('routesfound', function(e) {
+    routingControl.on('routesfound', function(e) {
         const route = e.routes[0];
-        animateCar(carMarker, route);
+        const bounds = L.latLngBounds(route.coordinates);
+        map.fitBounds(bounds, { padding: [50, 50] }); // Add padding
+
+        animateCar(carMarker, route, planNextTrip);
     });
+
+    // Start the first trip
+    planNextTrip();
 }
