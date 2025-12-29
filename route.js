@@ -1,3 +1,5 @@
+import { createCarMarker, animateCar } from './car.js';
+
 // Helper function to convert degrees to radians
 function toRadians(degrees) {
     return degrees * Math.PI / 180;
@@ -62,11 +64,18 @@ export function createRandomRoute(map) {
     L.marker(point1).addTo(map).bindPopup("Point 1");
     L.marker(point2).addTo(map).bindPopup("Point 2");
 
-    L.Routing.control({
+    const carMarker = createCarMarker(map, point1);
+
+    const control = L.Routing.control({
         waypoints: [
             point1,
             point2
         ],
-        createMarker: () => null // Use our own markers
+        createMarker: () => null
     }).addTo(map);
+
+    control.on('routesfound', function(e) {
+        const route = e.routes[0];
+        animateCar(carMarker, route);
+    });
 }
