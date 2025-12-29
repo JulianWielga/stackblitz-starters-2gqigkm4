@@ -49,7 +49,7 @@ function getFluctuatingSpeed_kmh(tripTime_s) {
     return combinedSpeed;
 }
 
-export function animateCar(carMarker, route, onComplete, onCarUpdate) {
+export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
     const coordinates = route.coordinates;
     const totalRouteDistance = calculatePolylineDistance(coordinates);
 
@@ -59,7 +59,21 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
     let lastActionTime = 0;
     let tripStartTime = null;
     let previousPosition = carMarker.getLatLng();
-    let smoothedBearing = 0; // Initialize smoothedBearing
+    let smoothedBearing = 0;
+
+    function getOptimalZoom(speedKmh) {
+        // Define zoom levels for different speed ranges
+        // These values can be tweaked for desired effect
+        if (speedKmh < 20) {
+            return 17; // Very close for slow speeds
+        } else if (speedKmh < 60) {
+            return 16; // Closer for moderate speeds
+        } else if (speedKmh < 100) {
+            return 15; // Moderate for cruising speeds
+        } else {
+            return 14; // Further for high speeds
+        }
+    }
 
     function animate(timestamp) {
         if (totalDistanceCovered >= totalRouteDistance && currentSpeed_mps === 0) {
@@ -69,7 +83,7 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
         if (!lastTimestamp) {
             lastTimestamp = timestamp;
             tripStartTime = timestamp;
-            smoothedBearing = getBearing(coordinates[0], coordinates[1] || coordinates[0]); // Initialize with first actual bearing
+            smoothedBearing = getBearing(coordinates[0], coordinates[1] || coordinates[0]);
             requestAnimationFrame(animate);
             return;
         }
@@ -93,7 +107,6 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
             targetSpeed_mps = (getFluctuatingSpeed_kmh(tripTime_s) * 1000) / 3600;
         }
 
-        // Adjust current speed towards target speed
         if (currentSpeed_mps < targetSpeed_mps) {
             currentSpeed_mps += ACCELERATION_MPS2 * effectiveDeltaTime_s;
             currentSpeed_mps = Math.min(currentSpeed_mps, targetSpeed_mps);
@@ -129,10 +142,13 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
             const targetBearing = getBearing(previousPosition, newPosition);
 
             const angleDiff = normalizeAngle(targetBearing - smoothedBearing);
-            smoothedBearing += angleDiff * 0.1; // Smoothing factor
+            smoothedBearing += angleDiff * 0.1;
 
             carMarker.setRotationAngle(smoothedBearing);
             previousPosition = newPosition;
+
+            // Update map view and zoom
+            map.setView(newPosition, getOptimalZoom(Math.round(currentSpeed_mps * 3.6)));
         }
 
         if (timestamp - lastActionTime >= ACTION_INTERVAL_MS) {

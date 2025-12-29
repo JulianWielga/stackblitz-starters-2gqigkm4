@@ -14,11 +14,7 @@ export function createRandomRoute(map, carMarker, onCarUpdate) {
 
     routingControl.on("routesfound", function (e) {
         const route = e.routes[0];
-        const bounds = L.latLngBounds(route.coordinates);
-        map.fitBounds(bounds, {
-            padding: [MAP_FIT_BOUNDS_PADDING_VALUE, MAP_FIT_BOUNDS_PADDING_VALUE],
-        });
-        animateCar(carMarker, e.routes[0], planNextTrip, onCarUpdate);
+        animateCar(map, carMarker, e.routes[0], planNextTrip, onCarUpdate);
     });
 
     planNextTrip();
