@@ -60,18 +60,17 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
     let tripStartTime = null;
     let previousPosition = carMarker.getLatLng();
     let smoothedBearing = 0;
+    let currentMapZoom = map.getZoom(); // Initialize currentMapZoom
 
     function getOptimalZoom(speedKmh) {
-        // Define zoom levels for different speed ranges
-        // These values can be tweaked for desired effect
         if (speedKmh < 20) {
-            return 17; // Very close for slow speeds
+            return 17;
         } else if (speedKmh < 60) {
-            return 16; // Closer for moderate speeds
+            return 16;
         } else if (speedKmh < 100) {
-            return 15; // Moderate for cruising speeds
+            return 15;
         } else {
-            return 14; // Further for high speeds
+            return 14;
         }
     }
 
@@ -147,8 +146,11 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
             carMarker.setRotationAngle(smoothedBearing);
             previousPosition = newPosition;
 
-            // Update map view and zoom
-            map.setView(newPosition, getOptimalZoom(Math.round(currentSpeed_mps * 3.6)));
+            // Update map view and smooth zoom
+            map.setView(newPosition);
+            const targetZoom = getOptimalZoom(Math.round(currentSpeed_mps * 3.6));
+            currentMapZoom += (targetZoom - currentMapZoom) * 0.05; // Smoothing factor for zoom
+            map.setZoom(currentMapZoom);
         }
 
         if (timestamp - lastActionTime >= ACTION_INTERVAL_MS) {
