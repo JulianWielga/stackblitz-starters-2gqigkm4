@@ -1,7 +1,7 @@
 import { ACTION_INTERVAL_MS, TIME_SCALE } from "../env.js";
 import { CITIES } from "./CITIES.js";
 import { generateHash } from "../utils.js";
-import { calculatePolylineDistance, getPointAtDistance, getBearing } from "./utils.js";
+import { calculatePolylineDistance, getPointAtDistance, getBearing, normalizeAngle } from "./utils.js";
 
 export function createCarMarker(map, startPosition) {
     const id = generateHash();
@@ -59,6 +59,7 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
     let lastActionTime = 0;
     let tripStartTime = null;
     let previousPosition = carMarker.getLatLng();
+    let smoothedBearing = 0; // Initialize smoothedBearing
 
     function animate(timestamp) {
         if (totalDistanceCovered >= totalRouteDistance && currentSpeed_mps === 0) {
@@ -68,6 +69,7 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
         if (!lastTimestamp) {
             lastTimestamp = timestamp;
             tripStartTime = timestamp;
+            smoothedBearing = getBearing(coordinates[0], coordinates[1] || coordinates[0]); // Initialize with first actual bearing
             requestAnimationFrame(animate);
             return;
         }
@@ -124,8 +126,12 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
         const newPosition = getPointAtDistance(coordinates, totalDistanceCovered);
         if (newPosition) {
             carMarker.setLatLng(newPosition);
-            const bearing = getBearing(previousPosition, newPosition);
-            carMarker.setRotationAngle(bearing);
+            const targetBearing = getBearing(previousPosition, newPosition);
+
+            const angleDiff = normalizeAngle(targetBearing - smoothedBearing);
+            smoothedBearing += angleDiff * 0.1; // Smoothing factor
+
+            carMarker.setRotationAngle(smoothedBearing);
             previousPosition = newPosition;
         }
 
