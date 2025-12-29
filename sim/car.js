@@ -1,4 +1,5 @@
 import {performCarAction} from "../performCarAction.js";
+import {ACTION_INTERVAL_MS, TIME_SCALE} from "../env.js";
 
 // Helper function to interpolate a point at a given distance on a polyline
 function getPointAtDistance(coords, distance) {
@@ -54,9 +55,7 @@ const MIN_SPEED_KMH = 10; // Minimum speed in km/h
 const MIN_SPEED_MPS = MIN_SPEED_KMH * 1000 / 3600; // Minimum speed in m/s
 const ACCELERATION_MPS2 = 1.5; // Acceleration in m/s^2
 const DECELERATION_MPS2 = 2.0; // Deceleration in m/s^2
-const ACTION_INTERVAL_MS = 2000; // Interval for performCarAction in milliseconds
 
-// New configurable constants
 const STOPPING_BUFFER_METERS = 0.25; // Small buffer for precision when calculating stopping distance
 const FLOATING_POINT_TOLERANCE_METERS = 0.01; // Tolerance for floating point comparisons at the end of the route
 const FLUCTUATING_SPEED_THRESHOLD_MULTIPLIER = 1.5; // Multiplier for MIN_SPEED_MPS to determine when to start fluctuating speed
@@ -103,8 +102,9 @@ export function animateCar(map, carMarker, route, onComplete) {
             return;
         }
 
-        const deltaTime_s = (timestamp - lastTimestamp) / 1000;
-        const tripTime_s = (timestamp - tripStartTime) / 1000;
+        const rawDeltaTime_s = (timestamp - lastTimestamp) / 1000;
+        const effectiveDeltaTime_s = rawDeltaTime_s * TIME_SCALE;
+        const tripTime_s = (timestamp - tripStartTime) / 1000; // Trip time is not affected by speed multiplier
         lastTimestamp = timestamp;
 
         let remainingDistance = totalRouteDistance - totalDistanceCovered;
@@ -127,22 +127,22 @@ export function animateCar(map, carMarker, route, onComplete) {
 
         // Adjust current speed towards target speed
         if (currentSpeed_mps < targetSpeed_mps) {
-            currentSpeed_mps += ACCELERATION_MPS2 * deltaTime_s;
+            currentSpeed_mps += ACCELERATION_MPS2 * effectiveDeltaTime_s;
             currentSpeed_mps = Math.min(currentSpeed_mps, targetSpeed_mps);
             // Ensure minimum speed when accelerating, unless target is 0 (for stopping)
             if (targetSpeed_mps !== 0) {
                 currentSpeed_mps = Math.max(currentSpeed_mps, MIN_SPEED_MPS);
             }
         } else if (currentSpeed_mps > targetSpeed_mps) {
-            currentSpeed_mps -= DECELERATION_MPS2 * deltaTime_s;
+            currentSpeed_mps -= DECELERATION_MPS2 * effectiveDeltaTime_s;
             currentSpeed_mps = Math.max(currentSpeed_mps, targetSpeed_mps);
         }
 
         // Ensure speed doesn't go below zero
-        currentSpeed_mps = Math.max(0.2, currentSpeed_mps); // This line ensures a minimal speed of 1m/s, which should be removed or changed
+        currentSpeed_mps = Math.max(0.2, currentSpeed_mps);
 
         // Calculate distance increment based on current speed
-        let distanceIncrement = currentSpeed_mps * deltaTime_s;
+        let distanceIncrement = currentSpeed_mps * effectiveDeltaTime_s;
 
         // Robust End Condition Check: If the car is effectively at or past the end
         if (totalDistanceCovered + distanceIncrement >= totalRouteDistance - FLOATING_POINT_TOLERANCE_METERS) { // -0.01 for floating point tolerance
@@ -164,7 +164,7 @@ export function animateCar(map, carMarker, route, onComplete) {
             carMarker.setLatLng(newPosition);
         }
 
-        // Call performCarAction at regular intervals
+        // Call performCarAction at regular intervals (based on actual time, not scaled)
         if (timestamp - lastActionTime >= ACTION_INTERVAL_MS) {
             performCarAction(map, carMarker.getLatLng(), Math.round(currentSpeed_mps * 3.6)); // Convert m/s to km/h
             lastActionTime = timestamp;

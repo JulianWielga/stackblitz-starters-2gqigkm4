@@ -1,4 +1,5 @@
 import {animateCar, createCarMarker} from './car.js';
+import {RANDOM_DISTANCE_KM} from "../env.js";
 
 // Helper function to convert degrees to radians
 function toRadians(degrees) {
@@ -12,8 +13,8 @@ function toDegrees(radians) {
 
 // --- Configuration Constants ---
 const EARTH_RADIUS_KM = 6371; // Earth's radius in kilometers
-const MIN_RANDOM_DISTANCE_KM = .2; // Minimum random distance for a trip in kilometers
-const RANDOM_DISTANCE_RANGE_KM = .5; // Range of random distance for a trip in kilometers (e.g., 0.5 + 1.5 = 2 km max)
+const MIN_RANDOM_DISTANCE_KM = RANDOM_DISTANCE_KM / 10; // Minimum random distance for a trip in kilometers
+const RANDOM_DISTANCE_RANGE_KM = RANDOM_DISTANCE_KM * 1.5; // Range of random distance for a trip in kilometers (e.g., 0.5 + 1.5 = 2 km max)
 const MAP_FIT_BOUNDS_PADDING_VALUE = 50; // Padding for map.fitBounds in pixels
 // --- End Configuration Constants ---
 

@@ -6,3 +6,7 @@ export const TOKEN = "KNvNBaUNRA2OQJG3xlseVkVR";
 
 export const SOCKET_URL = `wss://${TENANT}-blabber.staging-cloud.nussknacker.io/stream/${SOCKET_TOPIC}`;
 export const POST_URL = `https://${TENANT}-gateway.staging-cloud.nussknacker.io/topics/${POST_TOPIC}`;
+
+export const ACTION_INTERVAL_MS = 1000;
+export const TIME_SCALE = 1;
+export const RANDOM_DISTANCE_KM = 5;
