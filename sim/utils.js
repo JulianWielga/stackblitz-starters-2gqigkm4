@@ -46,7 +46,7 @@ export function getPointAtDistance(coords, distance) {
     for (let i = 0; i < coords.length - 1; i++) {
         const from = coords[i];
         const to = coords[i + 1];
-        const segmentDistance = from.distanceTo(to); // distance in meters
+        const segmentDistance = from.distanceTo(to);
 
         if (accumulatedDistance + segmentDistance >= distance) {
             const ratio = (distance - accumulatedDistance) / segmentDistance;

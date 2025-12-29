@@ -21,22 +21,21 @@ export function createCarMarker(map, startPosition) {
     return { id, marker };
 }
 
-const MAX_SPEED_KMH = 130; // Maximum speed in km/h
-const MAX_SPEED_MPS = (MAX_SPEED_KMH * 1000) / 3600; // Maximum speed in m/s
-const MIN_SPEED_KMH = 10; // Minimum speed in km/h
-const MIN_SPEED_MPS = (MIN_SPEED_KMH * 1000) / 3600; // Minimum speed in m/s
-const ACCELERATION_MPS2 = 1.5; // Acceleration in m/s^2
-const DECELERATION_MPS2 = 2.0; // Deceleration in m/s^2
+const MAX_SPEED_KMH = 130;
+const MAX_SPEED_MPS = (MAX_SPEED_KMH * 1000) / 3600;
+const MIN_SPEED_KMH = 10;
+const MIN_SPEED_MPS = (MIN_SPEED_KMH * 1000) / 3600;
+const ACCELERATION_MPS2 = 1.5;
+const DECELERATION_MPS2 = 2.0;
 
-const STOPPING_BUFFER_METERS = 0.25; // Small buffer for precision when calculating stopping distance
-const FLOATING_POINT_TOLERANCE_METERS = 0.01; // Tolerance for floating point comparisons at the end of the route
-const FLUCTUATING_SPEED_THRESHOLD_MULTIPLIER = 1.5; // Multiplier for MIN_SPEED_MPS to determine when to start fluctuating speed
+const STOPPING_BUFFER_METERS = 0.25;
+const FLOATING_POINT_TOLERANCE_METERS = 0.01;
+const FLUCTUATING_SPEED_THRESHOLD_MULTIPLIER = 1.5;
 
 function getFluctuatingSpeed_kmh(tripTime_s) {
     const baseSpeed_kmh = (MIN_SPEED_KMH + MAX_SPEED_KMH) / 2;
     const amplitude_kmh = (MAX_SPEED_KMH - MIN_SPEED_KMH) / 2;
 
-    // Introduce multiple sine waves for more varied, yet smooth, fluctuation
     const frequency1 = 0.5;
     const speedComponent1 = amplitude_kmh * 0.7 * Math.sin(tripTime_s * frequency1);
 
@@ -45,7 +44,6 @@ function getFluctuatingSpeed_kmh(tripTime_s) {
 
     let combinedSpeed = baseSpeed_kmh + speedComponent1 + speedComponent2;
 
-    // Ensure speed stays within bounds [MIN_SPEED_KMH, MAX_SPEED_KMH]
     combinedSpeed = Math.max(MIN_SPEED_KMH, Math.min(MAX_SPEED_KMH, combinedSpeed));
 
     return combinedSpeed;
@@ -53,17 +51,16 @@ function getFluctuatingSpeed_kmh(tripTime_s) {
 
 export function animateCar(carMarker, route, onComplete, onCarUpdate) {
     const coordinates = route.coordinates;
-    const totalRouteDistance = calculatePolylineDistance(coordinates); // Calculate actual distance from coordinates
+    const totalRouteDistance = calculatePolylineDistance(coordinates);
 
     let totalDistanceCovered = 0;
     let lastTimestamp = null;
     let currentSpeed_mps = 0;
     let lastActionTime = 0;
     let tripStartTime = null;
-    let previousPosition = carMarker.getLatLng(); // Initialize previousPosition
+    let previousPosition = carMarker.getLatLng();
 
     function animate(timestamp) {
-        // If animation already finished, just return
         if (totalDistanceCovered >= totalRouteDistance && currentSpeed_mps === 0) {
             return;
         }
@@ -77,26 +74,20 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
 
         const rawDeltaTime_s = (timestamp - lastTimestamp) / 1000;
         const effectiveDeltaTime_s = rawDeltaTime_s * TIME_SCALE;
-        const tripTime_s = (timestamp - tripStartTime) / 1000; // Trip time is not affected by speed multiplier
+        const tripTime_s = (timestamp - tripStartTime) / 1000;
         lastTimestamp = timestamp;
 
         let remainingDistance = totalRouteDistance - totalDistanceCovered;
 
-        // Calculate stopping distance: v^2 = u^2 + 2as => s = v^2 / (2a)
         const requiredStoppingDistance = (currentSpeed_mps * currentSpeed_mps) / (2 * DECELERATION_MPS2);
 
         let targetSpeed_mps;
 
         if (remainingDistance <= requiredStoppingDistance + STOPPING_BUFFER_METERS) {
-            // Small buffer for precision
-            // Phase 3: Decelerate to stop at the end
             targetSpeed_mps = 0;
         } else if (currentSpeed_mps < MIN_SPEED_MPS * FLUCTUATING_SPEED_THRESHOLD_MULTIPLIER) {
-            // Threshold to get into fluctuating speed range
-            // Phase 1: Accelerate initially towards MAX_SPEED
             targetSpeed_mps = MAX_SPEED_MPS;
         } else {
-            // Phase 2: Fluctuating speed
             targetSpeed_mps = (getFluctuatingSpeed_kmh(tripTime_s) * 1000) / 3600;
         }
 
@@ -104,7 +95,6 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
         if (currentSpeed_mps < targetSpeed_mps) {
             currentSpeed_mps += ACCELERATION_MPS2 * effectiveDeltaTime_s;
             currentSpeed_mps = Math.min(currentSpeed_mps, targetSpeed_mps);
-            // Ensure minimum speed when accelerating, unless target is 0 (for stopping)
             if (targetSpeed_mps !== 0) {
                 currentSpeed_mps = Math.max(currentSpeed_mps, MIN_SPEED_MPS);
             }
@@ -113,24 +103,20 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
             currentSpeed_mps = Math.max(currentSpeed_mps, targetSpeed_mps);
         }
 
-        // Ensure speed doesn't go below zero
         currentSpeed_mps = Math.max(0.2, currentSpeed_mps);
 
-        // Calculate distance increment based on current speed
         let distanceIncrement = currentSpeed_mps * effectiveDeltaTime_s;
 
-        // Robust End Condition Check: If the car is effectively at or past the end
         if (totalDistanceCovered + distanceIncrement >= totalRouteDistance - FLOATING_POINT_TOLERANCE_METERS) {
-            // -0.01 for floating point tolerance
-            totalDistanceCovered = totalRouteDistance; // Ensure it's exactly at the end
-            currentSpeed_mps = 0; // Force speed to zero at destination
+            totalDistanceCovered = totalRouteDistance;
+            currentSpeed_mps = 0;
             carMarker.setLatLng(coordinates[coordinates.length - 1]);
-            onCarUpdate(carMarker.getLatLng(), 0); // Car stopped
+            onCarUpdate(carMarker.getLatLng(), 0);
 
             if (onComplete) {
                 onComplete();
             }
-            return; // Stop animation
+            return;
         }
 
         totalDistanceCovered += distanceIncrement;
@@ -143,9 +129,8 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
             previousPosition = newPosition;
         }
 
-        // Call performCarAction at regular intervals (based on actual time, not scaled)
         if (timestamp - lastActionTime >= ACTION_INTERVAL_MS) {
-            onCarUpdate(carMarker.getLatLng(), Math.round(currentSpeed_mps * 3.6)); // Convert m/s to km/h
+            onCarUpdate(carMarker.getLatLng(), Math.round(currentSpeed_mps * 3.6));
             lastActionTime = timestamp;
         }
 
