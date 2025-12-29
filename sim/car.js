@@ -60,7 +60,18 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
     let tripStartTime = null;
     let previousPosition = carMarker.getLatLng();
     let smoothedBearing = 0;
-    let currentMapZoom = map.getZoom(); // Initialize currentMapZoom
+    if (coordinates.length >= 2) {
+        smoothedBearing = getBearing(coordinates[0], coordinates[1]);
+    } else if (coordinates.length === 1) {
+        smoothedBearing = 0; // Or a default bearing if only one point
+    }
+
+    let currentMapZoom = getOptimalZoom(MIN_SPEED_KMH); // Initialize with a default optimal zoom
+    if (isNaN(map.getZoom())) { // Check if map.getZoom() returned an invalid number
+        map.setZoom(currentMapZoom); // Set initial map zoom if it was invalid
+    } else {
+        currentMapZoom = map.getZoom();
+    }
 
     function getOptimalZoom(speedKmh) {
         if (speedKmh < 20) {
@@ -82,7 +93,8 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
         if (!lastTimestamp) {
             lastTimestamp = timestamp;
             tripStartTime = timestamp;
-            smoothedBearing = getBearing(coordinates[0], coordinates[1] || coordinates[0]);
+            // smoothedBearing is initialized outside now
+            map.setZoom(currentMapZoom); // Ensure map is at initial zoom
             requestAnimationFrame(animate);
             return;
         }
