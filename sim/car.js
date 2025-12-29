@@ -8,10 +8,12 @@ export function createCarMarker(map, startPosition) {
 
     startPosition ||= CITIES[Math.floor(Math.random() * CITIES.length)];
 
+    const w = 140 / 6;
+    const h = 280 / 6;
     const carIcon = L.icon({
-        iconUrl: "https://icons.iconarchive.com/icons/fa-team/fontawesome/128/FontAwesome-Car-icon.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+        iconUrl: "sim/cars/blue.png",
+        iconSize: [w, h],
+        iconAnchor: [w / 2, h / 2],
     });
 
     const marker = L.marker(startPosition, { icon: carIcon, interactive: false }).addTo(map);
