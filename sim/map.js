@@ -1,7 +1,7 @@
 import { createRandomRoute } from "./route.js";
 import { createCarMarker } from "./car.js";
 
-export function initializeMap(getCarUpdate) {
+export function initializeMap(getOnCarUpdate) {
     const map = L.map("map");
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -10,7 +10,9 @@ export function initializeMap(getCarUpdate) {
     }).addTo(map);
 
     const car = createCarMarker(map);
-    createRandomRoute(map, car.marker, getCarUpdate(map, car.id));
+    const sim = { map, carId: car.id };
 
-    return { map, carId: car.id };
+    createRandomRoute(map, car.marker, getOnCarUpdate(sim));
+
+    return sim;
 }

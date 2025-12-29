@@ -1,12 +1,12 @@
-import { readDataMessage } from "./readDataMessage.js";
 import { readSubscriptionId, storeSubscriptionId } from "./subscriptionIdStore.js";
 
 import { SOCKET_URL, TOKEN } from "./env.js";
+import { getDataMessageHandler } from "./dataHandlers.js";
 
 let ws;
 let reconnectTimer;
 
-const connect = (sim) => {
+const connect = (onDataMessage) => {
     if (document.visibilityState !== "visible") return;
 
     const subscription = readSubscriptionId();
@@ -24,7 +24,7 @@ const connect = (sim) => {
                     return storeSubscriptionId(subscriptionId);
                 }
                 case "message": {
-                    return readDataMessage(sim, JSON.parse(data));
+                    return onDataMessage(JSON.parse(data));
                 }
             }
         } catch (e) {
@@ -48,12 +48,12 @@ const scheduleReconnect = () => {
     }, 1000);
 };
 
-export function initializeConnection(sim) {
+export function initializeConnection(onDataMessage) {
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible" && (!ws || ws.readyState === WebSocket.CLOSED)) {
-            connect(sim);
+            connect(onDataMessage);
         }
     });
 
-    connect(sim);
+    connect(onDataMessage);
 }

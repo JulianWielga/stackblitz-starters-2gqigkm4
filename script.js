@@ -1,6 +1,6 @@
 import { initializeMap } from "./sim/map.js";
 import { initializeConnection } from "./connection.js";
-import { getCarAction } from "./getCarAction.js";
+import { getCarUpdateHandler, getDataMessageHandler } from "./dataHandlers.js";
 
-const sim = initializeMap(getCarAction);
-initializeConnection(sim);
+const sim = initializeMap((sim) => getCarUpdateHandler(sim));
+initializeConnection(getDataMessageHandler(sim));
