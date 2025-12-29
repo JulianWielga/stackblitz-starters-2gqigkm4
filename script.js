@@ -1,4 +1,4 @@
-import { initializeMap } from './map.js';
+import { initializeMap } from './sim/map.js';
 import { initializeConnection } from './connection.js';
 
 initializeMap();
