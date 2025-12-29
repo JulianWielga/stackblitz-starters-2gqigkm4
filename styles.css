@@ -18,3 +18,7 @@ html, body, main {
 main {
     display: grid;
 }
+
+.leaflet-routing-container {
+    display: none;
+}

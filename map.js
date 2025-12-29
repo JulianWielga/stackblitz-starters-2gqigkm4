@@ -69,6 +69,11 @@ export function initializeMap() {
     L.marker(point1).addTo(map).bindPopup("Point 1");
     L.marker(point2).addTo(map).bindPopup("Point 2");
 
-    const bounds = L.latLngBounds(point1, point2);
-    map.fitBounds(bounds);
+    L.Routing.control({
+        waypoints: [
+            point1,
+            point2
+        ],
+        createMarker: () => null // Use our own markers
+    }).addTo(map);
 }
