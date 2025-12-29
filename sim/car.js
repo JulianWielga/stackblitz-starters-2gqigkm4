@@ -1,4 +1,4 @@
-import {performCarAction} from "./performCarAction.js";
+import {performCarAction} from "../performCarAction.js";
 
 // Helper function to interpolate a point at a given distance on a polyline
 function getPointAtDistance(coords, distance) {
