@@ -1,16 +1,17 @@
 import {POST_URL} from "./env.js";
 
-export async function postData(id, {lat, lng}, kph) {
-    const response = await fetch(POST_URL, {
+let possibleCors = false;
+
+export function postData(id, {lat, lng}, kph) {
+    if (possibleCors) throw "Possible CORS error before";
+    return fetch(POST_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({id, lng, lat, kph})
+    }).catch(error => {
+        possibleCors = true;
+        throw "Possible CORS error";
     });
-
-    if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`Request failed: ${response.status} ${errorBody}`);
-    }
 }

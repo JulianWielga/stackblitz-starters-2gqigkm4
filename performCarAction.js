@@ -6,8 +6,9 @@ const carId = generateHash();
 export async function performCarAction(map, position, speed_kmh) {
     try {
         await postData(carId, position, speed_kmh)
-        drawDot(map, position, "#00ff00");
+        drawDot(map, position, "rgb(0 255 0)");
     } catch (e) {
-        drawDot(map, position, "#ff0000");
+        console.debug(e, {...position}, speed_kmh);
+        drawDot(map, position, "rgb(255 0 0 / .5)");
     }
 }
