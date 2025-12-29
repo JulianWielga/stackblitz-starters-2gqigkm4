@@ -68,3 +68,22 @@ export function calculatePolylineDistance(coords) {
     }
     return totalDistance;
 }
+
+export function getBearing(latLng1, latLng2) {
+    const lat1 = toRadians(latLng1.lat);
+    const lon1 = toRadians(latLng1.lng);
+    const lat2 = toRadians(latLng2.lat);
+    const lon2 = toRadians(latLng2.lng);
+
+    const deltaLon = lon2 - lon1;
+
+    const y = Math.sin(deltaLon) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+
+    let bearing = toDegrees(Math.atan2(y, x));
+    if (bearing < 0) {
+        bearing += 360;
+    }
+    return bearing;
+}
+

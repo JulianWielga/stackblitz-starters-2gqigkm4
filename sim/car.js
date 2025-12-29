@@ -1,7 +1,7 @@
 import { ACTION_INTERVAL_MS, TIME_SCALE } from "../env.js";
 import { CITIES } from "./CITIES.js";
 import { generateHash } from "../utils.js";
-import { calculatePolylineDistance, getPointAtDistance } from "./utils.js";
+import { calculatePolylineDistance, getPointAtDistance, getBearing } from "./utils.js";
 
 export function createCarMarker(map, startPosition) {
     const id = generateHash();
@@ -13,7 +13,7 @@ export function createCarMarker(map, startPosition) {
     const carIcon = L.icon({
         iconUrl: "sim/cars/blue.png",
         iconSize: [w, h],
-        iconAnchor: [w / 2, h / 2],
+        iconAnchor: [w * 0.5, h * 0.5],
     });
 
     const marker = L.marker(startPosition, { icon: carIcon, interactive: false }).addTo(map);
@@ -60,6 +60,7 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
     let currentSpeed_mps = 0;
     let lastActionTime = 0;
     let tripStartTime = null;
+    let previousPosition = carMarker.getLatLng(); // Initialize previousPosition
 
     function animate(timestamp) {
         // If animation already finished, just return
@@ -137,6 +138,9 @@ export function animateCar(carMarker, route, onComplete, onCarUpdate) {
         const newPosition = getPointAtDistance(coordinates, totalDistanceCovered);
         if (newPosition) {
             carMarker.setLatLng(newPosition);
+            const bearing = getBearing(previousPosition, newPosition);
+            carMarker.setRotationAngle(bearing);
+            previousPosition = newPosition;
         }
 
         // Call performCarAction at regular intervals (based on actual time, not scaled)
