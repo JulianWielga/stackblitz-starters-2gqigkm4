@@ -67,22 +67,30 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
     }
 
     let currentMapZoom = getOptimalZoom(MIN_SPEED_KMH); // Initialize with a default optimal zoom
-    if (isNaN(map.getZoom())) { // Check if map.getZoom() returned an invalid number
+    if (isNaN(map.getZoom())) {
+        // Check if map.getZoom() returned an invalid number
         map.setZoom(currentMapZoom); // Set initial map zoom if it was invalid
     } else {
         currentMapZoom = map.getZoom();
     }
 
     function getOptimalZoom(speedKmh) {
-        if (speedKmh < 20) {
-            return 19;
-        } else if (speedKmh < 60) {
-            return 18;
-        } else if (speedKmh < 100) {
-            return 17;
-        } else {
-            return 16;
-        }
+        const MIN_ZOOM = 16; // Zoomed out for max speed
+        const MAX_ZOOM = 19; // Zoomed in for min speed
+
+        // Clamp speedKmh to be within MIN_SPEED_KMH and MAX_SPEED_KMH
+        const clampedSpeedKmh = Math.max(MIN_SPEED_KMH, Math.min(MAX_SPEED_KMH, speedKmh));
+
+        // Calculate a normalized speed percentage (0 to 1)
+        // 0 at MIN_SPEED_KMH, 1 at MAX_SPEED_KMH
+        const speedPercentage = (clampedSpeedKmh - MIN_SPEED_KMH) / (MAX_SPEED_KMH - MIN_SPEED_KMH);
+
+        // Interpolate zoom level inversely proportional to speed
+        // Faster speed -> smaller zoom number (zoomed out)
+        // Slower speed -> larger zoom number (zoomed in)
+        let optimalZoom = MAX_ZOOM - (speedPercentage * (MAX_ZOOM - MIN_ZOOM));
+
+        return Math.round(optimalZoom);
     }
 
     function animate(timestamp) {
@@ -159,10 +167,10 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
             previousPosition = newPosition;
 
             // Update map view and smooth zoom
-            map.setView(newPosition);
             const targetZoom = getOptimalZoom(Math.round(currentSpeed_mps * 3.6));
             currentMapZoom += (targetZoom - currentMapZoom) * 0.05; // Smoothing factor for zoom
             map.setZoom(currentMapZoom);
+            map.setView(newPosition);
         }
 
         if (timestamp - lastActionTime >= ACTION_INTERVAL_MS) {
