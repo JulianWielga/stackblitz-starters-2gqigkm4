@@ -9,7 +9,7 @@ export const getCarUpdateHandler =
             drawDot(map, position, "rgb(0 255 0)");
         } catch (e) {
             console.debug({ ...position, kph: speed_kmh });
-            drawDot(map, position, "rgb(255 0 0 / .5)");
+            drawDot(map, position, "rgb(255 0 0)");
         }
     };
 

@@ -1,7 +1,7 @@
 import { ACTION_INTERVAL_MS, TIME_SCALE } from "../env.js";
 import { CITIES } from "./CITIES.js";
 import { generateHash } from "../utils.js";
-import { calculatePolylineDistance, getPointAtDistance, getBearing, normalizeAngle } from "./utils.js";
+import { calculatePolylineDistance, getBearing, getPointAtDistance } from "./utils.js";
 
 export function createCarMarker(map, startPosition) {
     const id = generateHash();
@@ -59,38 +59,13 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
     let lastActionTime = 0;
     let tripStartTime = null;
     let previousPosition = carMarker.getLatLng();
-    let smoothedBearing = 0;
-    if (coordinates.length >= 2) {
-        smoothedBearing = getBearing(coordinates[0], coordinates[1]);
-    } else if (coordinates.length === 1) {
-        smoothedBearing = 0; // Or a default bearing if only one point
-    }
-
-    let currentMapZoom = getOptimalZoom(MIN_SPEED_KMH); // Initialize with a default optimal zoom
-    if (isNaN(map.getZoom())) {
-        // Check if map.getZoom() returned an invalid number
-        map.setZoom(currentMapZoom); // Set initial map zoom if it was invalid
-    } else {
-        currentMapZoom = map.getZoom();
-    }
 
     function getOptimalZoom(speedKmh) {
-        const MIN_ZOOM = 16; // Zoomed out for max speed
-        const MAX_ZOOM = 19; // Zoomed in for min speed
-
-        // Clamp speedKmh to be within MIN_SPEED_KMH and MAX_SPEED_KMH
+        const MIN_ZOOM = 15; // Zoomed out for max speed
+        const MAX_ZOOM = 17; // Zoomed in for min speed
         const clampedSpeedKmh = Math.max(MIN_SPEED_KMH, Math.min(MAX_SPEED_KMH, speedKmh));
-
-        // Calculate a normalized speed percentage (0 to 1)
-        // 0 at MIN_SPEED_KMH, 1 at MAX_SPEED_KMH
         const speedPercentage = (clampedSpeedKmh - MIN_SPEED_KMH) / (MAX_SPEED_KMH - MIN_SPEED_KMH);
-
-        // Interpolate zoom level inversely proportional to speed
-        // Faster speed -> smaller zoom number (zoomed out)
-        // Slower speed -> larger zoom number (zoomed in)
-        let optimalZoom = MAX_ZOOM - (speedPercentage * (MAX_ZOOM - MIN_ZOOM));
-
-        return optimalZoom;
+        return MAX_ZOOM - speedPercentage * (MAX_ZOOM - MIN_ZOOM);
     }
 
     function animate(timestamp) {
@@ -101,8 +76,6 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
         if (!lastTimestamp) {
             lastTimestamp = timestamp;
             tripStartTime = timestamp;
-            // smoothedBearing is initialized outside now
-            map.setZoom(currentMapZoom); // Ensure map is at initial zoom
             requestAnimationFrame(animate);
             return;
         }
@@ -157,20 +130,18 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
 
         const newPosition = getPointAtDistance(coordinates, totalDistanceCovered);
         if (newPosition) {
+            carMarker.setRotationAngle(getBearing(previousPosition, newPosition));
             carMarker.setLatLng(newPosition);
-            const targetBearing = getBearing(previousPosition, newPosition);
-
-            const angleDiff = normalizeAngle(targetBearing - smoothedBearing);
-            smoothedBearing += angleDiff * 0.1;
-
-            carMarker.setRotationAngle(smoothedBearing);
             previousPosition = newPosition;
 
-            // Update map view and smooth zoom
             const targetZoom = getOptimalZoom(Math.round(currentSpeed_mps * 3.6));
-            currentMapZoom += (targetZoom - currentMapZoom) * 0.05; // Smoothing factor for zoom
-            map.setZoom(currentMapZoom);
-            map.setView(newPosition);
+            let currentMapZoom = map.getZoom();
+            currentMapZoom += (targetZoom - currentMapZoom) * 0.0005;
+            try {
+                map.flyTo(newPosition, currentMapZoom);
+            } catch (e) {
+                map.setView(newPosition, currentMapZoom);
+            }
         }
 
         if (timestamp - lastActionTime >= ACTION_INTERVAL_MS) {

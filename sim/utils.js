@@ -86,8 +86,3 @@ export function getBearing(latLng1, latLng2) {
     }
     return bearing;
 }
-
-export function normalizeAngle(angle) {
-    return (angle + 180) % 360 - 180;
-}
-
