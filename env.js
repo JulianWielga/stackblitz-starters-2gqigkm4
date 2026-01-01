@@ -9,4 +9,4 @@ export const POST_URL = `https://${TENANT}-gateway.staging-cloud.nussknacker.io/
 
 export const ACTION_INTERVAL_MS = 1000;
 export const TIME_SCALE = 1;
-export const RANDOM_DISTANCE_KM = 5;
+export const RANDOM_DISTANCE_KM = .25;

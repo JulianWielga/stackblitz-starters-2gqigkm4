@@ -19,8 +19,8 @@ main {
     display: grid;
 }
 
-#map .leaflet-map-pane .leaflet-tile-container {
-    filter: brightness(0.8) blur(0.2px) sepia(1) hue-rotate(50deg);
+#map .leaflet-tile-pane {
+    filter: brightness(0.6) sepia(1)  hue-rotate(50deg);
 }
 #map .leaflet-marker-pane .leaflet-marker-icon {
     filter: brightness(1.5) hue-rotate(90deg) contrast(10) drop-shadow(0px 0px 8px #bf76ff);

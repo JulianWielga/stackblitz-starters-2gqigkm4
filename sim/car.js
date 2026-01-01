@@ -62,7 +62,7 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
 
     function getOptimalZoom(speedKmh) {
         const MIN_ZOOM = 15; // Zoomed out for max speed
-        const MAX_ZOOM = 17; // Zoomed in for min speed
+        const MAX_ZOOM = 18; // Zoomed in for min speed
         const clampedSpeedKmh = Math.max(MIN_SPEED_KMH, Math.min(MAX_SPEED_KMH, speedKmh));
         const speedPercentage = (clampedSpeedKmh - MIN_SPEED_KMH) / (MAX_SPEED_KMH - MIN_SPEED_KMH);
         return MAX_ZOOM - speedPercentage * (MAX_ZOOM - MIN_ZOOM);
@@ -136,7 +136,7 @@ export function animateCar(map, carMarker, route, onComplete, onCarUpdate) {
 
             const targetZoom = getOptimalZoom(Math.round(currentSpeed_mps * 3.6));
             let currentMapZoom = map.getZoom();
-            currentMapZoom += (targetZoom - currentMapZoom) * 0.0005;
+            currentMapZoom += (targetZoom - currentMapZoom) * 0.001;
             try {
                 map.flyTo(newPosition, currentMapZoom);
             } catch (e) {
